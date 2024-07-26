@@ -1,0 +1,124 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
+use IEEE.STD_LOGIC_UNSIGNED.ALL;
+
+entity odd_counter is
+    Port	 ( CT : in  STD_LOGIC_VECTOR (2 downto 0);
+           CLK : in  STD_LOGIC;
+           RST : in  STD_LOGIC;
+           CNTL : out  STD_LOGIC_VECTOR (7 downto 0);
+           UNDF : out  STD_LOGIC;
+           OVRF : out  STD_LOGIC;
+           VLD : out  STD_LOGIC);
+end odd_counter;
+--___________________(ARXH_RST+CLK_CHECK)_______________________________________
+architecture Behavior of odd_counter is
+
+signal CNTLtemp:  STD_LOGIC_VECTOR (7 downto 0);
+signal OVRFtemp: STD_LOGIC;
+signal UNDFtemp: STD_LOGIC;
+signal VLDtemp: STD_LOGIC;
+
+BEGIN
+	PROCESS
+			BEGIN
+				WAIT UNTIL CLK'EVENT AND CLK = '1' ;
+					
+				IF RST='1' THEN
+					CNTLtemp<=B"0000_0000";
+					OVRFtemp<='0';
+					UNDFtemp<='0';
+					VLDtemp<='1';
+					
+				ELSIF UNDFtemp='1' THEN
+					CNTLtemp<= CNTLtemp;
+				
+				ELSIF OVRFtemp='1' THEN
+					CNTLtemp<= CNTLtemp;
+				--END IF;
+					
+--___________________(TELOS_RST+CLK_CHECK)_______________________________________
+			ELSE
+--_______________________(ARXH_CHECK)____________________________________________		
+			IF (CT="111") THEN
+				If CNTLtemp >= b"1111_0100" THEN
+					OVRFtemp<='1';
+					UNDFtemp<='0';			
+					VLDtemp<='0';
+				END If;		
+				
+			ELSIF (CT="110") THEN
+				If CNTLtemp >= b"1111_1010" THEN
+					OVRFtemp<='1';
+					UNDFtemp<='0';
+					VLDtemp<='0';
+				END If;
+				
+			ELSIF (CT="101") THEN
+				If CNTLtemp >= b"1111_1011" THEN
+					OVRFtemp<='1';
+					UNDFtemp<='0';
+					VLDtemp<='0';
+				END If;
+				
+			ELSIF (CT="100") THEN
+				If CNTLtemp >= b"1111_1110" THEN
+					OVRFtemp<='1';
+					UNDFtemp<='0';
+					VLDtemp<='0';
+				END If;
+					
+			ELSIF (CT="001") THEN
+				If CNTLtemp <= b"0000_0001" THEN
+					UNDFtemp<='1';
+					OVRFtemp<='0';
+					VLDtemp<='0';
+				END If;
+					
+			ELSIF (CT="011") THEN
+				If CNTLtemp >= b"1111_1111" THEN
+					OVRFtemp<='1';
+					UNDFtemp<='0';
+					VLDtemp<='0';
+					END If;
+					
+			ELSIF (CT="000") THEN
+				If CNTLtemp <= b"0000_0100" THEN
+					UNDFtemp<='1';
+					OVRFtemp<='0';
+					VLDtemp<='0';
+				END If;
+				
+			ELSIF (CT="000") THEN
+					CNTLtemp<= CNTLtemp;
+					
+			END IF;
+--____________________________(TELOS_CHECK)___________________________________
+			--ELSE
+--____________________________(ARXH COUNTER)__________________________________
+						IF CT="000" AND UNDFtemp='0' THEN
+							CNTLtemp <=CNTLtemp-5;
+						elsif CT="001" AND UNDFtemp='0' THEN
+							CNTLtemp <=CNTLtemp-2;
+						elsif CT="010" THEN
+							CNTLtemp <=CNTLtemp;
+						elsif CT="011" AND OVRFtemp='0' THEN
+							CNTLtemp <=CNTLtemp+1;
+						elsif CT="100" AND OVRFtemp='0' THEN
+							CNTLtemp <=CNTLtemp+2;
+						elsif CT="101" AND OVRFtemp='0' THEN
+							CNTLtemp<=CNTLtemp+5;
+						elsif CT="110" AND OVRFtemp='0' THEN
+							CNTLtemp<=CNTLtemp+6;
+						elsif CT="111" AND OVRFtemp='0' THEN
+							CNTLtemp <=CNTLtemp+12;
+						END IF ; 
+				END IF ;
+			END PROCESS;
+			CNTL<=CNTLtemp;
+			UNDF<=UNDFtemp;
+			OVRF<=OVRFtemp;
+			VLD<=VLDtemp;
+End Behavior; 
+--____________________________(TELOS COUNTER)_________________________________
